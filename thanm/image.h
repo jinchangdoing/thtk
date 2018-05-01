@@ -26,19 +26,51 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  */
-#ifndef UTIL_H_
-#define UTIL_H_
+#ifndef IMAGE_H_
+#define IMAGE_H_
 
 #include <config.h>
-#include <string.h>
+#include <inttypes.h>
+#include <stdio.h>
 
-#ifndef HAVE_MEMPCPY
-/* "Writes" a value to a buffer and returns a pointer to the memory location
- * after the written value. */
-void* mempcpy(
-    void* dest,
-    const void* src,
-    size_t n);
-#endif
+typedef enum {
+    FORMAT_RGBA8888 = -1, /* Internal use only. */
+    FORMAT_BGRA8888 = 1,
+    FORMAT_BGR565   = 3,
+    FORMAT_BGRA4444 = 5,
+    FORMAT_GRAY8    = 7
+} format_t;
+
+unsigned int
+format_Bpp(
+    format_t format);
+
+unsigned char*
+format_from_rgba(
+    const uint32_t* data,
+    unsigned int pixels,
+    format_t format);
+
+unsigned char*
+format_to_rgba(
+    const unsigned char* data,
+    unsigned int pixels,
+    format_t format);
+
+typedef struct {
+    unsigned char* data;
+    unsigned int width;
+    unsigned int height;
+    format_t format;
+} image_t;
+
+image_t*
+png_read(
+    const char* filename);
+
+void
+png_write(
+    const char* filename,
+    image_t* image);
 
 #endif

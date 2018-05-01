@@ -1,13 +1,100 @@
-What's new in thtk 7:
+What's new in thtk 10
+====================
 
-thdat: Support for TH14, TH143, TH15 has been added.
-thdat: Support for TH105, TH123 has been added. These are not tested, and may
-       behave wrongly.
-thdat: You can archive the whole directory now. Pass the directory name as the
-       argument.
-thecl: Support for TH14, TH143, TH15 has been added.
-thanm: Support for TH15 has been added.
-thmsg: Support for TH15 has been added.
+This release introduces a new syntax for all commands, incompatible with
+previous versions. Please refer to the manpages for new syntax.
+
+Mnemonic version names (such as HSiFS or LoLK) are now supported by all
+commands.
+
+#### thanm
+- Support spaces in image file names.
+
+#### thecl
+- Multiple eclmaps can be specified on the command line now.
+- Added unused instruction formats (th07)
+
+#### thdat
+- Added support for Uwabami Breakers
+- Added automatic version detection, using -xd and -ld parameters
+- Fixed crash when trying to list archive of wrong version
+
+#### thtk
+- Added support for wide filenames
+- Functions for detecting the version of dat file
+- Import lib is now included with the release
+
+#### contrib
+Added a contrib directory with a bunch of goodies.
+- C++ wrapper for thtk library
+- thdat plugin for Midnight Commander
+- thdat plugin for Total Commander
+
+Please submit an issue at GitHub (https://github.com/thpatch/thtk/issues) if
+you find a bug.
+
+
+-------------------------------------------------------------------------------
+
+What's new in thtk 9
+====================
+
+#### thecl
+- Fixed compiling TH06-095 ECL files.
+
+Please submit an issue at GitHub (https://github.com/thpatch/thtk/issues) if
+you find a bug.
+
+
+-------------------------------------------------------------------------------
+
+What's new in thtk 8
+====================
+
+#### thanm
+- Support for TH16 has been added.
+
+#### thdat
+- Support for TH01 and TH16 has been added.
+- Fixed multi-threading support.
+
+#### thecl
+- Support for TH16 has been added.
+- Many fixes to opcode parameter formats.
+- Improved difficulty flag handling in TH13+. This is a breaking change and
+  may cause issues when compiling existing ECL sources.
+- Added support for mapping ECL global variables and opcodes to human readable
+  names.
+- Fixed the long broken expression decompilation support.
+
+#### thmsg
+- Support for TH16 has been added.
+
+Please submit an issue at GitHub (https://github.com/thpatch/thtk/issues) if
+you find a bug.
+
+
+-------------------------------------------------------------------------------
+
+
+What's new in thtk 7
+====================
+
+#### thanm
+- Support for TH15 has been added.
+
+#### thdat
+- Support for TH14, TH143, TH15 has been added.
+- Support for TH105, TH123 has been added. These are not tested, and may
+  behave wrongly.
+- You can archive the whole directory now. Pass the directory name as the
+  argument.
+
+#### thecl  
+- Support for TH14, TH143, TH15 has been added.
+
+#### thmsg
+- Support for TH15 has been added.
 
 Support for TH143 is not tested. Please submit the issue at the GitHub project
-page(https://github.com/thpatch/thtk/issues) if you found a bug.
+page (https://github.com/thpatch/thtk/issues) if you found a bug.

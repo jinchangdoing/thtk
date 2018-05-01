@@ -26,19 +26,35 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  * DAMAGE.
  */
-#ifndef UTIL_H_
-#define UTIL_H_
+
+#ifndef ECLMAP_H_
+#define ECLMAP_H_
 
 #include <config.h>
-#include <string.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include "list.h"
 
-#ifndef HAVE_MEMPCPY
-/* "Writes" a value to a buffer and returns a pointer to the memory location
- * after the written value. */
-void* mempcpy(
-    void* dest,
-    const void* src,
-    size_t n);
-#endif
+typedef struct eclmap_entry_t {
+    int opcode;
+    char* signature;
+    char* mnemonic;
+} eclmap_entry_t;
+
+typedef list_t eclmap_t;
+
+/* Allocates and initalizes a new eclmap */
+#define eclmap_new() ((eclmap_t*)list_new())
+/* Frees an eclmap */
+void eclmap_free(eclmap_t* map);
+/* Sets an entry in a eclmap */
+void eclmap_set(eclmap_t* map, const eclmap_entry_t* ent);
+/* Finds an entry in a eclmap by opcode */
+eclmap_entry_t* eclmap_get(eclmap_t* map, int opcode);
+/* Finds an entry in a eclmap by mnemonic */
+eclmap_entry_t* eclmap_find(eclmap_t* map, const char* mnemonic);
+/* Loads entries from eclmap file (thread unsafe) */
+void eclmap_load(eclmap_t* opcodes, eclmap_t* globals, FILE* f, const char* fn);
 
 #endif

@@ -33,6 +33,7 @@
 #include "bits.h"
 #include "thdat.h"
 #include "thlzss.h"
+#include "dattypes.h"
 
 static uint32_t
 th06_read_uint32(
@@ -86,18 +87,6 @@ th06_write_string(
     for (i = 0; i < length; ++i)
         bitstream_write(b, 8, data[i]);
 }
-
-typedef struct {
-#ifdef PACK_PRAGMA
-#pragma pack(push,1)
-#endif
-    uint32_t count;
-    uint32_t offset;
-    uint32_t size;
-#ifdef PACK_PRAGMA
-#pragma pack(pop)
-#endif
-} PACK_ATTRIBUTE th07_header_t;
 
 static int
 th06_open(

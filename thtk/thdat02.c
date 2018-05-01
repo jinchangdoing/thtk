@@ -32,62 +32,7 @@
 #include "thdat.h"
 #include "thrle.h"
 #include "util.h"
-
-typedef struct {
-#ifdef PACK_PRAGMA
-#pragma pack(push,1)
-#endif
-    uint16_t magic;
-    /* Appears unused. */
-    uint8_t key;
-    unsigned char name[13];
-    uint32_t zsize;
-    uint32_t size;
-    uint32_t offset;
-    uint32_t zero;
-#ifdef PACK_PRAGMA
-#pragma pack(pop)
-#endif
-} PACK_ATTRIBUTE th02_entry_header_t;
-
-typedef struct {
-#ifdef PACK_PRAGMA
-#pragma pack(push,1)
-#endif
-    uint16_t size;
-    uint16_t unknown1;
-    uint16_t count;
-    uint8_t key;
-    uint8_t zero2[9];
-#ifdef PACK_PRAGMA
-#pragma pack(pop)
-#endif
-} PACK_ATTRIBUTE th03_archive_header_t;
-
-typedef struct {
-#ifdef PACK_PRAGMA
-#pragma pack(push,1)
-#endif
-    uint16_t magic;
-    uint8_t key;
-    unsigned char name[13];
-    uint16_t zsize;
-    uint16_t size;
-    uint32_t offset;
-    uint32_t zero[2];
-#ifdef PACK_PRAGMA
-#pragma pack(pop)
-#endif
-} PACK_ATTRIBUTE th03_entry_header_t;
-
-/* TODO: These constants should be calculated instead. */
-static const uint8_t archive_key = 0x12;
-static const uint8_t entry_key = 0x34;
-
-/* Used for uncompressed entries. */
-static const uint16_t magic1 = 0xf388;
-/* Used for compressed entries. */
-static const uint16_t magic2 = 0x9595;
+#include "dattypes.h"
 
 static int
 th02_open(
@@ -98,7 +43,7 @@ th02_open(
     th02_entry_header_t* th02_entry_headers = NULL;
     th03_entry_header_t* th03_entry_headers = NULL;
 
-    if (thdat->version == 2) {
+    if (thdat->version <= 2) {
         th02_entry_header_t eh2;
         if (thtk_io_read(thdat->stream, &eh2, sizeof(eh2), error) != sizeof(eh2))
             return 0;
@@ -120,7 +65,7 @@ th02_open(
 
     thdat->entries = malloc(thdat->entry_count * sizeof(thdat_entry_t));
 
-    if (thdat->version == 2) {
+    if (thdat->version <= 2) {
         th02_entry_headers = malloc(thdat->entry_count * sizeof(th02_entry_header_t));
         if (thtk_io_read(thdat->stream, th02_entry_headers, thdat->entry_count * sizeof(th02_entry_header_t), error) !=
             (ssize_t)(thdat->entry_count * sizeof(th02_entry_header_t)))
@@ -141,24 +86,24 @@ th02_open(
     for (unsigned int e = 0; e < thdat->entry_count; ++e) {
         thdat_entry_t* entry = &thdat->entries[e];
 
-        entry->extra = thdat->version == 2
-            ? 0x12 /* th02_entry_headers[e].key */
+        entry->extra = thdat->version <= 2
+            ? th02_keys[thdat->version - 1] /* th02_entry_headers[e].key */
             : th03_entry_headers[e].key;
 
-        if (thdat->version == 2) {
+        if (thdat->version <= 2) {
             for (unsigned int i = 0; i < 13 && th02_entry_headers[e].name[i]; ++i)
                 th02_entry_headers[e].name[i] ^= 0xff;
         }
-        memcpy(entry->name, thdat->version == 2
+        memcpy(entry->name, thdat->version <= 2
             ? th02_entry_headers[e].name
             : th03_entry_headers[e].name, 13);
-        entry->zsize = thdat->version == 2
+        entry->zsize = thdat->version <= 2
             ? th02_entry_headers[e].zsize
             : th03_entry_headers[e].zsize;
-        entry->size = thdat->version == 2
+        entry->size = thdat->version <= 2
             ? th02_entry_headers[e].size
             : th03_entry_headers[e].size;
-        entry->offset = thdat->version == 2
+        entry->offset = thdat->version <= 2
             ? th02_entry_headers[e].offset
             : th03_entry_headers[e].offset;
     }
@@ -208,7 +153,7 @@ th02_create(
     thdat_t* thdat,
     thtk_error_t** error)
 {
-    if (thdat->version == 2)
+    if (thdat->version <= 2)
         thdat->offset = (thdat->entry_count + 1) * sizeof(th02_entry_header_t);
     else
         thdat->offset = sizeof(th03_archive_header_t) + (thdat->entry_count + 1) * sizeof(th03_entry_header_t);
@@ -233,7 +178,7 @@ th02_write(
     if (input_offset == -1)
         return -1;
 
-    if (thdat->version == 2) {
+    if (thdat->version <= 2) {
         for (unsigned int i = 0; i < 13; ++i)
             if (entry->name[i])
                 entry->name[i] ^= 0xff;
@@ -259,7 +204,7 @@ th02_write(
         return -1;
 
     for (ssize_t i = 0; i < entry->zsize; ++i)
-        data[i] ^= thdat->version == 2 ? 0x12 : entry_key;
+        data[i] ^= thdat->version <= 2 ? th02_keys[thdat->version - 1] : entry_key;
 
     ssize_t ret = -1;
 
@@ -302,7 +247,7 @@ th02_close(
             return 0;
     }
 
-    size_t buffer_size = (thdat->entry_count + 1) * (thdat->version == 2 ? sizeof(th02_entry_header_t) : sizeof(th03_entry_header_t));
+    size_t buffer_size = (thdat->entry_count + 1) * (thdat->version <= 2 ? sizeof(th02_entry_header_t) : sizeof(th03_entry_header_t));
     unsigned char* buffer = malloc(buffer_size);
     unsigned char* buffer_ptr = buffer;
 
@@ -310,7 +255,7 @@ th02_close(
 
     for (size_t i = 0; i < thdat->entry_count; ++i) {
         thdat_entry_t* entry = &thdat->entries[i];
-        if (thdat->version == 2) {
+        if (thdat->version <= 2) {
             th02_entry_header_t eh2 = {
                 .magic = entry->zsize == entry->size ? magic1 : magic2,
                 .key = 3,
